@@ -6,6 +6,16 @@ Home Assistant custom integration for **X-Sense** smoke alarms, CO detectors, co
 
 Built on [python-xsense](https://github.com/theosnel/python-xsense) by Theo Snelleman, adapted from his [Home Assistant integration prototype](https://github.com/theosnel/homeassistant-core/tree/xsense/homeassistant/components/xsense).
 
+# Screenshots
+
+The main integration page, per account and a list of your devices.
+
+<img width="1071" height="395" alt="image" src="https://github.com/user-attachments/assets/47eadcc0-03d1-4b44-8849-96855d66866f" />
+
+Example of a devices page
+
+<img width="1370" height="909" alt="image" src="https://github.com/user-attachments/assets/639cf875-51b9-496d-8519-b21aa6307ac7" />
+
 ## How it works
 
 X-Sense devices are managed through the **X-Sense cloud**. There is no local LAN API — this integration talks to the same backend as the mobile app.
