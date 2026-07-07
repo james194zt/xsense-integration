@@ -2,118 +2,238 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
 
-Home Assistant custom integration for **X-Sense** smoke, CO, heat, water, motion, door, temperature/humidity sensors, and base stations.
+Home Assistant custom integration for **X-Sense** smoke alarms, CO detectors, combo units, base stations, and other devices linked to your X-Sense Home Security account.
 
 Built on [python-xsense](https://github.com/theosnel/python-xsense) by Theo Snelleman, adapted from his [Home Assistant integration prototype](https://github.com/theosnel/homeassistant-core/tree/xsense/homeassistant/components/xsense).
 
+## How it works
+
+X-Sense devices are managed through the **X-Sense cloud**. There is no local LAN API — this integration talks to the same backend as the mobile app.
+
+```
+┌─────────────────┐     login / discovery      ┌──────────────────┐
+│  Home Assistant │ ◄────────────────────────► │  X-Sense Cloud   │
+│   (this addon)  │     REST API (polling)     │  api.x-sense-iot │
+└────────┬────────┘                            └────────┬─────────┘
+         │                                              │
+         │         MQTT over WebSocket (push)           │
+         └──────────────────────────────────────────────┘
+                    AWS IoT (per region: EU, US, …)
+```
+
+On setup, the integration:
+
+1. **Authenticates** with your X-Sense account (AWS Cognito, same as the app).
+2. **Discovers** all houses, base stations, and paired devices in the account.
+3. **Polls** device state from the cloud API every 5 minutes as a fallback.
+4. **Connects** to the X-Sense MQTT servers for your region(s) and subscribes to device shadow and alarm event topics for near real-time updates.
+
+Each physical device becomes a Home Assistant **device** with entities created only for data fields the device actually reports. Child sensors (e.g. smoke detectors paired to an SBS50) appear under their base station via the device hierarchy.
+
+### Cloud dependency
+
+This is a **cloud_push** integration. Home Assistant needs internet access to the X-Sense API and MQTT endpoints. Devices continue to work standalone and through the app if Home Assistant is offline; HA simply won't receive updates until connectivity returns.
+
 ## Features
 
-- Cloud login with your X-Sense app credentials
-- Automatic discovery of all houses, base stations, and paired devices
-- **MQTT push updates** for alarms, battery, temperature, humidity, and connectivity
-- **Polling fallback** every 5 minutes for devices that do not push over MQTT
-- Per-device entities:
-  - **Sensors** — battery, temperature, humidity, CO ppm, Wi-Fi RSSI, RF level, firmware
-  - **Binary sensors** — smoke/CO alarm, mute status, door open, end-of-life, alarm active
-  - **Buttons** — device self-test (where supported)
-- Re-authentication flow when your session expires
+- One-time setup via config flow (email + password)
+- Automatic discovery of all devices in the linked account
+- Real-time alarm and status updates over MQTT
+- 5-minute polling fallback when a push update is missed
+- Separate **smoke** and **CO** alarm binary sensors on combo detectors (e.g. SC07-WX)
+- Battery, temperature, humidity, CO ppm, Wi-Fi/RF diagnostics where reported
+- Self-test and mute buttons on supported models
+- Re-authentication flow when the cloud session expires
+- Diagnostics download for troubleshooting (credentials redacted)
+
+## Requirements
+
+- Home Assistant **2024.6** or newer
+- [HACS](https://hacs.xyz/) (recommended) or manual install
+- An X-Sense Home Security account with devices already set up in the app
+- Outbound HTTPS and WSS access to X-Sense cloud endpoints
+
+## Installation
+
+### HACS (recommended)
+
+1. Open **HACS → Integrations → ⋮ → Custom repositories**
+2. Add `https://github.com/james194zt/xsense-integration` as type **Integration**
+3. Search **X-Sense Home Security** → **Download**
+4. Restart Home Assistant
+
+### Manual
+
+Copy the `custom_components/xsense` folder into your Home Assistant `config/custom_components/` directory and restart.
+
+## Setup
+
+### Recommended: use a secondary account
+
+The X-Sense cloud allows only one active session per account. If Home Assistant and the mobile app share the same login, you may get logged out of one or the other.
+
+The recommended approach:
+
+1. Create a **second X-Sense account** (separate email).
+2. In the X-Sense app on your main account, **share** your devices/house with the secondary account.
+3. In Home Assistant, add the integration using the **secondary account** credentials.
+
+Device management (pairing, removal, firmware, sharing) stays in the app on your main account.
+
+### Add the integration
+
+1. **Settings → Devices & services → Add integration**
+2. Search for **X-Sense Home Security**
+3. Enter the email and password for your (secondary) X-Sense account
+4. Devices appear automatically after the first sync
+
+If setup fails, remove the entry, update to the latest version, restart Home Assistant, and try again. Check **Settings → System → Logs** and filter for `xsense` if problems persist.
 
 ## Supported devices
 
-Any device type mapped in [python-xsense](https://github.com/theosnel/python-xsense/blob/develop/xsense/entity_map.py), including:
+Entities are created for whatever fields each device reports. The integration supports any device type mapped in [python-xsense](https://github.com/theosnel/python-xsense/blob/develop/xsense/entity_map.py).
 
-| Type | Examples |
-|------|----------|
+| Category | Models |
+|----------|--------|
 | Base stations | SBS10, SBS50 |
-| Smoke (Wi-Fi standalone) | **XS0B-iR**, XS01-WX |
-| Smoke (RF / hub) | XS01-M, XS0B-MR, XP02S-MR |
+| Smoke (Wi-Fi standalone) | XS01-WX, **XS0B-iR** |
+| Smoke (RF / via hub) | XS01-M, XS0B-MR, XP02S-MR |
 | CO | XC01-M, XC04-WX, XC0C-iR |
-| Smoke + CO combo (Wi-Fi) | **SC07-WX**, SC06-WX, XP0A-MR |
-
-### Tested model notes
-
-**SC07-WX** — Wi-Fi smoke and CO combo with display. No base station required. Exposes separate `Smoke alarm` and `CO alarm` binary sensors (alarm status `1` = smoke, `2` = CO, `3` = both), plus CO ppm, battery, mute, and mute button.
-
-**XS0B-iR** (retail label may show as HS0B-IR) — Wi-Fi standalone smoke alarm using the X-Sense Home Security app. Exposes smoke alarm, battery, mute status, and self-test button. Does not use an SBS50 base station.
-| Temperature/humidity | STH0A, STH0B, STH51 |
-| Water | SWS51 |
+| Smoke + CO combo | **SC07-WX**, SC06-WX, XP0A-MR |
+| Temperature / humidity | STH0A, STH0B, STH51 |
+| Water leak | SWS51 |
 | Motion | SMS0A |
 | Door | SDS0A |
 | Heat | XH02-M |
 | Keypad | SKP0A |
 | Mailbox | SMA51 |
 
-## Install (HACS)
+### Confirmed working
 
-1. **HACS → Integrations → ⋮ → Custom repositories**
-2. Add `https://github.com/james194zt/xsense-integration` as type **Integration**
-3. Search **X-Sense Home Security** → Install
-4. Restart Home Assistant
+| Model | Notes |
+|-------|-------|
+| **SC07-WX** | Wi-Fi smoke + CO combo with display. No base station. Separate smoke/CO alarm sensors, CO ppm, battery, mute button. |
+| **XS0B-iR** | Wi-Fi standalone smoke alarm (retail label may show **HS0B-IR**). Smoke alarm, battery, mute status, self-test. No SBS50. |
 
-### Manual install
+Combo detectors use numeric alarm status: `1` = smoke, `2` = CO, `3` = both. The integration exposes these as separate `binary_sensor.*_smoke_alarm` and `binary_sensor.*_co_alarm` entities.
 
-Copy `custom_components/xsense` into your Home Assistant `config/custom_components/` directory and restart.
+## Entities
 
-## Setup
+Entities are only created when the device reports the underlying field.
 
-1. **Settings → Devices & services → Add integration → X-Sense Home Security**
-2. Enter the email and password from your X-Sense / X-Sense Home Security app
-3. All devices in your account appear automatically, grouped under their base station
+### Binary sensors
 
-### Tip: secondary account
+| Entity | Description |
+|--------|-------------|
+| Smoke alarm | Smoke detection active |
+| CO alarm | Carbon monoxide detection active (combo / CO devices) |
+| Mute status | Alarm is currently silenced |
+| End of life | Device has reached end of life |
+| Alarm active | Station-level alarm activation |
+| Door | Door open (door sensors) |
+| Connected | MQTT cloud link (diagnostic, per station) |
 
-Some users create a dedicated X-Sense account and share devices to it from the main account. This keeps HA credentials separate from your primary login.
+### Sensors
+
+| Entity | Description |
+|--------|-------------|
+| Battery | Battery level (%) |
+| Temperature | Temperature (°C) |
+| Humidity | Relative humidity (%) |
+| CO | CO concentration (ppm) |
+| Wi-Fi signal | RSSI (dBm) |
+| Wi-Fi SSID | Connected network name |
+| RF level | Radio signal quality (no signal / weak / moderate / good) |
+| Software version | Firmware version |
+| IP address | Device IP (where reported) |
+| Alarm / voice volume | Volume levels (where reported) |
+
+### Buttons
+
+| Entity | Description |
+|--------|-------------|
+| Test | Trigger device self-test (where supported) |
+| Mute | Silence alarm (where supported) |
 
 ## Automations
 
-Smoke alarm triggered:
+### Smoke alarm
 
 ```yaml
+alias: X-Sense smoke alarm notification
 trigger:
   - platform: state
-    entity_id: binary_sensor.kitchen_smoke_alarm_status
+    entity_id: binary_sensor.kitchen_smoke_alarm
     to: "on"
 action:
   - service: notify.mobile_app_your_phone
     data:
+      title: "Smoke alarm"
       message: "Smoke detected in the kitchen!"
 ```
 
-Low battery:
+### CO alarm (combo detectors)
 
 ```yaml
+alias: X-Sense CO alarm notification
+trigger:
+  - platform: state
+    entity_id: binary_sensor.hallway_co_alarm
+    to: "on"
+action:
+  - service: notify.mobile_app_your_phone
+    data:
+      title: "CO alarm"
+      message: "Carbon monoxide detected in the hallway!"
+```
+
+### Low battery
+
+```yaml
+alias: X-Sense low battery
 trigger:
   - platform: numeric_state
-    entity_id: sensor.hallway_smoke_battery
+    entity_id: sensor.bedroom_smoke_battery
     below: 20
 action:
   - service: notify.persistent_notification
     data:
-      message: "X-Sense hallway smoke detector battery is low"
+      message: "X-Sense bedroom smoke detector battery is low"
 ```
 
-## Architecture
+Replace entity IDs with the ones shown under **Settings → Devices & services → X-Sense Home Security**.
 
-```
-X-Sense Cloud API  ──polling──►  Coordinator  ──►  HA entities
-        │
-        └── MQTT (WebSocket) ──push──►  Coordinator
-```
+## Troubleshooting
 
-The integration maintains one MQTT WebSocket connection per X-Sense cloud region (e.g. EU, US). Alarm and sensor state changes arrive in near real-time; the coordinator also polls every 5 minutes as a safety net.
+| Symptom | Things to try |
+|---------|----------------|
+| Setup fails with *invalid auth* | Check email/password. Use a secondary account if the main account is logged in elsewhere. |
+| Setup fails with *cannot connect* | Check HA has internet access. X-Sense API may be temporarily unavailable. |
+| Integration shows *Failed setup, will retry* | Update to the latest version, restart HA, remove and re-add the integration. Check logs for `xsense`. |
+| Devices missing | Confirm they appear in the X-Sense app on the same account. Shared devices must be shared with the HA account. |
+| Stale values | MQTT may have disconnected; check the **Connected** diagnostic sensor. Polling refreshes every 5 minutes regardless. |
+| Logged out of the app | Use a dedicated secondary account for Home Assistant (see Setup above). |
 
-## Local development
+Download diagnostics from **Settings → Devices & services → X-Sense → ⋮ → Download diagnostics** when reporting issues on GitHub.
 
-This repo is part of the HADashboard workspace. To test locally, the integration is also mirrored at:
+## Limitations
 
-```
-homeassistant/custom_components/xsense/
-```
+- **Cloud only** — no local control without internet
+- **Read-focused** — alarm mute and self-test are supported where the cloud API allows; arm/disarm and full security-system control are not implemented
+- **Unofficial** — uses a reverse-engineered API; X-Sense may change their cloud at any time
+- **Entity coverage** — only fields reported by the cloud/MQTT are exposed; if the app shows a value HA doesn't, open an issue with diagnostics
+
+## Contributing
+
+Issues and pull requests welcome at [github.com/james194zt/xsense-integration](https://github.com/james194zt/xsense-integration).
+
+When reporting a problem, include your Home Assistant version, integration version, device model(s), and diagnostics output.
 
 ## Credits
 
 - [python-xsense](https://github.com/theosnel/python-xsense) — Theo Snelleman
-- Original HA integration design — Theo Snelleman
+- Original Home Assistant integration design — Theo Snelleman
+- [Jarnsen/ha-xsense-component_test](https://github.com/Jarnsen/ha-xsense-component_test) — community reference implementation
 
 ## License
 
