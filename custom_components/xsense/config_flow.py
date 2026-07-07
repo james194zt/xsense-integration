@@ -7,7 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 from xsense import AsyncXSense
-from xsense.exceptions import AuthFailed
+from xsense.exceptions import APIFailure, AuthFailed
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -30,14 +30,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, email: str, password: str) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     session = AsyncXSense()
-    await session.init()
-
     try:
+        await session.init()
         await session.login(email, password)
     except AuthFailed as ex:
         raise InvalidAuth(f"Login failed: {ex}") from ex
-    finally:
-        await session.close()
+    except APIFailure as ex:
+        raise CannotConnect(f"X-Sense API error: {ex}") from ex
 
     if not session.access_token:
         raise InvalidAuth

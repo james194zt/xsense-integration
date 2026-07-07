@@ -42,13 +42,21 @@ class XSenseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Get MQTT server instance for a specific host."""
         return self.mqtt_servers.get(host)
 
+    async def _close_session(self) -> None:
+        """Close the API client when supported by the installed python-xsense version."""
+        if self.xsense is None:
+            return
+        close = getattr(self.xsense, "close", None)
+        if callable(close):
+            await close()
+        self.xsense = None
+
     async def _connect(self) -> None:
         """Authenticate with the X-Sense cloud API."""
         email = self.entry.data[CONF_EMAIL]
         password = self.entry.data[CONF_PASSWORD]
 
-        if self.xsense is not None:
-            await self.xsense.close()
+        await self._close_session()
 
         self.xsense = AsyncXSense()
         await self.xsense.init()
@@ -63,10 +71,7 @@ class XSenseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         for mqtt in self.mqtt_servers.values():
             await mqtt.async_disconnect(disconnect_paho_client=True)
         self.mqtt_servers.clear()
-
-        if self.xsense is not None:
-            await self.xsense.close()
-            self.xsense = None
+        await self._close_session()
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from X-Sense."""
