@@ -29,9 +29,6 @@
       "connected": {
         "name": "Connected"
       },
-      "smoke_alarm": {
-        "name": "Smoke alarm"
-      },
       "co_alarm": {
         "name": "CO alarm"
       },

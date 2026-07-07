@@ -28,5 +28,67 @@
       "already_configured": "This X-Sense account is already configured.",
       "reauth_successful": "Re-authentication successful."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Connected"
+      },
+      "co_alarm": {
+        "name": "CO alarm"
+      },
+      "is_life_end": {
+        "name": "Status"
+      },
+      "mute_status": {
+        "name": "Muted"
+      },
+      "activate": {
+        "name": "Alarm active"
+      },
+      "door": {
+        "name": "Door"
+      }
+    },
+    "button": {
+      "test": {
+        "name": "Test alarm"
+      },
+      "mute": {
+        "name": "Mute alarm"
+      }
+    },
+    "sensor": {
+      "alarm_vol": {
+        "name": "Alarm volume"
+      },
+      "ip_address": {
+        "name": "IP address"
+      },
+      "rf_level": {
+        "name": "RF signal",
+        "state": {
+          "no_signal": "No signal",
+          "weak": "Weak",
+          "moderate": "Moderate",
+          "good": "Good"
+        }
+      },
+      "sw_version": {
+        "name": "Software version"
+      },
+      "voice_vol": {
+        "name": "Voice volume"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "wifi_sw": {
+        "name": "Wi-Fi firmware"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi signal"
+      }
+    }
   }
 }

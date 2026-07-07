@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -15,8 +15,17 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.S
 patch_xsense_library()
 
 
+def _account_title(email: str) -> str:
+    """Return the config-entry title shown under Hubs."""
+    return f"Account: {email}"
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up X-Sense Home Security from a config entry."""
+    account_title = _account_title(entry.data[CONF_EMAIL])
+    if entry.title != account_title:
+        hass.config_entries.async_update_entry(entry, title=account_title)
+
     coordinator = XSenseDataUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()

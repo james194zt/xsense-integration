@@ -41,7 +41,7 @@ async def validate_input(hass: HomeAssistant, email: str, password: str) -> dict
     if not session.access_token:
         raise InvalidAuth
 
-    return {"title": f"X-Sense {session.username}"}
+    return {"title": f"Account: {email}"}
 
 
 class XSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -83,7 +83,7 @@ def co_alarm_active(data: dict[str, Any]) -> bool:
 
 def has_smoke_alarm_entity(entity) -> bool:
     """Whether to expose a smoke alarm binary sensor."""
-    return "alarmStatus" in entity.data or entity.type in COMBO_MODELS | SMOKE_MODELS
+    return "alarmStatus" in entity.data
 
 
 def has_co_alarm_entity(entity) -> bool:

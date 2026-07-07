@@ -37,13 +37,13 @@ SENSORS: tuple[XSenseBinarySensorEntityDescription, ...] = (
     XSenseBinarySensorEntityDescription(
         key="is_life_end",
         translation_key="is_life_end",
+        name="Status",
         icon="mdi:information-outline",
         exists_fn=lambda entity: "isLifeEnd" in entity.data,
         value_fn=lambda entity: entity.data["isLifeEnd"] == 1,
     ),
     XSenseBinarySensorEntityDescription(
         key="smoke_alarm",
-        translation_key="smoke_alarm",
         device_class=BinarySensorDeviceClass.SMOKE,
         exists_fn=has_smoke_alarm_entity,
         value_fn=lambda entity: smoke_alarm_active(entity.data),
@@ -58,6 +58,7 @@ SENSORS: tuple[XSenseBinarySensorEntityDescription, ...] = (
     XSenseBinarySensorEntityDescription(
         key="mute_status",
         translation_key="mute_status",
+        name="Muted",
         icon="mdi:alarm-light-off",
         exists_fn=lambda entity: "muteStatus" in entity.data,
         value_fn=lambda entity: entity.data["muteStatus"],
