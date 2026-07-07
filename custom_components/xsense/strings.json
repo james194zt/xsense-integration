@@ -1,0 +1,89 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Connected"
+      },
+      "smoke_alarm": {
+        "name": "Smoke alarm"
+      },
+      "co_alarm": {
+        "name": "CO alarm"
+      },
+      "is_life_end": {
+        "name": "End of life"
+      },
+      "mute_status": {
+        "name": "Muted"
+      },
+      "activate": {
+        "name": "Alarm active"
+      },
+      "door": {
+        "name": "Door"
+      }
+    },
+    "button": {
+      "test": {
+        "name": "Test"
+      }
+    },
+    "sensor": {
+      "alarm_vol": {
+        "name": "Alarm volume"
+      },
+      "ip_address": {
+        "name": "IP address"
+      },
+      "rf_level": {
+        "name": "RF signal",
+        "state": {
+          "no_signal": "No signal",
+          "weak": "Weak",
+          "moderate": "Moderate",
+          "good": "Good"
+        }
+      },
+      "sw_version": {
+        "name": "Software version"
+      },
+      "voice_vol": {
+        "name": "Voice volume"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "wifi_sw": {
+        "name": "Wi-Fi firmware"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi signal"
+      }
+    }
+  }
+}

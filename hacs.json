@@ -1,0 +1,5 @@
+{
+  "name": "X-Sense Home Security",
+  "render_readme": true,
+  "homeassistant": "2024.6.0"
+}

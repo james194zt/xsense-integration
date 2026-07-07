@@ -1,0 +1,32 @@
+{
+  "title": "X-Sense Home Security",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to X-Sense",
+        "description": "Sign in with the same email and password you use in the X-Sense app.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate X-Sense",
+        "description": "Your X-Sense session expired. Enter your credentials again.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the X-Sense cloud.",
+      "invalid_auth": "Invalid email or password.",
+      "unknown": "Unexpected error during setup."
+    },
+    "abort": {
+      "already_configured": "This X-Sense account is already configured.",
+      "reauth_successful": "Re-authentication successful."
+    }
+  }
+}
