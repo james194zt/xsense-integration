@@ -14,7 +14,7 @@ The main integration page, per account and a list of your devices.
 
 Example of a devices page
 
-<img width="1370" height="909" alt="image" src="https://github.com/user-attachments/assets/639cf875-51b9-496d-8519-b21aa6307ac7" />
+<img width="1303" height="909" alt="image" src="https://github.com/user-attachments/assets/2f778ef5-b266-4be8-8e8e-66bb529e4e47" />
 
 ## How it works
 
