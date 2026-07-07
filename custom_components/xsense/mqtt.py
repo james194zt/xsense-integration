@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
 from functools import lru_cache, partial
+import inspect
 from itertools import chain
 import logging
 from typing import Any
@@ -44,6 +45,14 @@ MAX_PACKETS_TO_READ = 500
 
 type SocketType = mqtt.WebsocketWrapper | Any
 type PublishPayloadType = str | bytes | int | float | None
+
+
+def _subscription_accepts_id() -> bool:
+    """Return whether this Home Assistant version requires subscription_id."""
+    try:
+        return "subscription_id" in inspect.signature(Subscription).parameters
+    except (TypeError, ValueError):
+        return False
 
 
 class XSenseMQTT:
@@ -88,6 +97,7 @@ class XSenseMQTT:
         self._misc_timer: asyncio.TimerHandle | None = None
         self._reconnect_task: asyncio.Task | None = None
         self._should_reconnect: bool = True
+        self._subscription_id: int = 0
 
     # def _async_ha_started
     # async def _async_ha_stop(self, _event: Event) -> None:
@@ -483,7 +493,22 @@ class XSenseMQTT:
         is_simple_match = not ("+" in topic or "#" in topic)
         matcher = None if is_simple_match else _matcher_for_topic(topic)
 
-        subscription = Subscription(topic, is_simple_match, matcher, job, qos, encoding)
+        self._subscription_id += 1
+        subscription_kwargs: dict[str, int] = {}
+        if _subscription_accepts_id():
+            subscription_kwargs["subscription_id"] = (
+                1 if is_simple_match else self._subscription_id
+            )
+
+        subscription = Subscription(
+            topic,
+            is_simple_match,
+            matcher,
+            job,
+            qos,
+            encoding,
+            **subscription_kwargs,
+        )
 
         self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()

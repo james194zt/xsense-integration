@@ -9,5 +9,5 @@
   "iot_class": "cloud_push",
   "issue_tracker": "https://github.com/james194zt/xsense-integration/issues",
   "requirements": ["python-xsense[async]==0.0.17", "paho-mqtt==2.1.0"],
-  "version": "0.1.2"
+  "version": "0.1.3"
 }
