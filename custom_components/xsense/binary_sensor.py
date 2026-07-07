@@ -37,8 +37,7 @@ SENSORS: tuple[XSenseBinarySensorEntityDescription, ...] = (
     XSenseBinarySensorEntityDescription(
         key="is_life_end",
         translation_key="is_life_end",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        icon="mdi:timelapse",
+        icon="mdi:information-outline",
         exists_fn=lambda entity: "isLifeEnd" in entity.data,
         value_fn=lambda entity: entity.data["isLifeEnd"] == 1,
     ),

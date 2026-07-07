@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
-from xsense import entity_map
+from xsense import AsyncXSense, entity_map
+from xsense.entity import Entity
+from xsense.exceptions import XSenseError
+from xsense.station import Station
 
 # Retail / marketing names → API device type codes.
 MODEL_LABELS: dict[str, str] = {
@@ -89,6 +93,48 @@ def has_co_alarm_entity(entity) -> bool:
     return "coPpm" in entity.data or entity.type.startswith("XC")
 
 
+def action_station(entity: Entity) -> Station:
+    """Return the station that owns an entity (standalone Wi-Fi devices are their own station)."""
+    if isinstance(entity, Station):
+        return entity
+    return entity.station
+
+
+async def async_run_device_action(xsense: AsyncXSense, entity: Entity, action: str) -> None:
+    """Run a cloud action for a device or standalone Wi-Fi station."""
+    entity_def = entity_map.entities.get(entity.type)
+    if not entity_def:
+        raise XSenseError(
+            f"Entity type {entity.type} is unknown, action {action} not possible"
+        )
+
+    action_def = next(
+        (item for item in entity_def.get("actions", []) if item.get("action") == action),
+        None,
+    )
+    if not action_def:
+        raise XSenseError(
+            f"Action {action} is not supported for entity type {entity.type}"
+        )
+
+    topic = action_def.get("topic")
+    if callable(topic):
+        topic = topic(entity)
+
+    station = action_station(entity)
+    desired: dict[str, Any] = {
+        "deviceSN": entity.sn,
+        "shadow": action_def["shadow"],
+        "stationSN": station.sn,
+        "time": datetime.now().strftime("%Y%m%d%H%M%S"),
+        "userId": xsense.userid,
+    }
+    if extra := action_def.get("extra"):
+        desired.update(extra)
+
+    await xsense.do_thing(station, topic, {"state": {"desired": desired}})
+
+
 def patch_xsense_library() -> None:
     """Extend python-xsense with models missing from upstream entity_map."""
     import xsense.mapping as mapping
@@ -97,7 +143,7 @@ def patch_xsense_library() -> None:
         entity_map.entities["XS0B-iR"] = {
             "type": entity_map.EntityType.SMOKE,
             "actions": [
-                entity_map.TestAction(),
+                entity_map.SATestAction(),
             ],
         }
 

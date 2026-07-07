@@ -138,7 +138,7 @@ Entities are only created when the device reports the underlying field.
 | Smoke alarm | Smoke detection active |
 | CO alarm | Carbon monoxide detection active (combo / CO devices) |
 | Mute status | Alarm is currently silenced |
-| End of life | Device has reached end of life |
+| End of life / status | Device status (e.g. end-of-life warning) |
 | Alarm active | Station-level alarm activation |
 | Door | Door open (door sensors) |
 | Connected | MQTT cloud link (diagnostic, per station) |

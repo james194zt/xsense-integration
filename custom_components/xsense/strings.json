@@ -36,7 +36,7 @@
         "name": "CO alarm"
       },
       "is_life_end": {
-        "name": "End of life"
+        "name": "Status"
       },
       "mute_status": {
         "name": "Muted"
@@ -50,7 +50,10 @@
     },
     "button": {
       "test": {
-        "name": "Test"
+        "name": "Test alarm"
+      },
+      "mute": {
+        "name": "Mute alarm"
       }
     },
     "sensor": {

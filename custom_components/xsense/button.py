@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
+from typing import Any
 
-from xsense import AsyncXSense
 from xsense.entity import Entity
 
 from homeassistant import config_entries
@@ -17,20 +17,21 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import XSenseDataUpdateCoordinator
+from .device_support import async_run_device_action
 from .entity import XSenseEntity
 
 
-async def run_action(entity: Entity, xsense: AsyncXSense, action: str) -> None:
+async def run_action(entity: Entity, xsense, action: str) -> None:
     """Run an X-Sense device action."""
-    await xsense.action(entity, action)
+    await async_run_device_action(xsense, entity, action)
 
 
 @dataclass(kw_only=True, frozen=True)
 class XSenseButtonEntityDescription(ButtonEntityDescription):
     """Describes an X-Sense button entity."""
 
-    exists_fn: Callable[[Entity, AsyncXSense], bool] = lambda entity, api: True
-    press_fn: Callable[[Entity, AsyncXSense], Awaitable[None]]
+    exists_fn: Callable[[Entity, Any], bool] = lambda entity, api: True
+    press_fn: Callable[[Entity, Any], Awaitable[None]]
 
 
 BUTTONS: tuple[XSenseButtonEntityDescription, ...] = (
