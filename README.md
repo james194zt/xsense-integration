@@ -46,7 +46,7 @@ Any device type mapped in [python-xsense](https://github.com/theosnel/python-xse
 ## Install (HACS)
 
 1. **HACS → Integrations → ⋮ → Custom repositories**
-2. Add `https://github.com/james194zt/ha-xsense` as type **Integration**
+2. Add `https://github.com/james194zt/xsense-integration` as type **Integration**
 3. Search **X-Sense Home Security** → Install
 4. Restart Home Assistant
 

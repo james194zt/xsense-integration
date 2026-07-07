@@ -4,10 +4,10 @@
   "codeowners": ["@james194zt"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/james194zt/ha-xsense",
+  "documentation": "https://github.com/james194zt/xsense-integration",
   "integration_type": "hub",
   "iot_class": "cloud_push",
-  "issue_tracker": "https://github.com/james194zt/ha-xsense/issues",
+  "issue_tracker": "https://github.com/james194zt/xsense-integration/issues",
   "requirements": ["python-xsense[async]==0.0.17", "paho-mqtt==2.1.0"],
   "version": "0.1.1"
 }
